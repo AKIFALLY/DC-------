@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DC 300A直流充電馬達測試器 — 模擬器</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- ─ 標題列 ─ -->
+<header id="titlebar">
+  <h1>DC 300A直流充電馬達測試器</h1>
+  <span id="sim-badge">🧪 模擬模式（無需連接真實設備）</span>
+</header>
+
+<div id="body">
+  <!-- ─ 左欄 ─ -->
+  <div id="left-col">
+
+    <!-- PLC 連線 -->
+    <fieldset class="conn-box">
+      <legend>PLC 連線</legend>
+      <div class="conn-row">
+        <label>IP:</label><input id="plc-ip" type="text" value="192.168.16.10">
+        <label>Port:</label><input id="plc-port" type="text" value="8501" class="port">
+        <button id="plc-connect" class="btn-plain">連線</button>
+        <button id="plc-disconnect" class="btn-plain" disabled>中斷</button>
+        <span id="plc-status" class="status-led off">● 未連線</span>
+      </div>
+    </fieldset>
+
+    <!-- 即時監視 -->
+    <fieldset id="monitor-box">
+      <legend>即時監視 (5 Hz)</legend>
+
+      <div class="status-line">
+        <span class="st-title">負載狀態:</span><span id="load-state" class="st-led gray">● ---</span>
+        <span class="st-title sp">模式:</span><span id="pel-mode" class="st-led gray">---</span>
+        <span class="st-title sp">發電機測試開關:</span><span id="gentest-state" class="st-led gray">● ---</span>
+      </div>
+      <div class="status-line">
+        <span class="st-title">伺服:</span><span id="servo-state" class="st-led gray">● ---</span>
+        <span class="st-title sp">異常:</span><span id="alarm-state" class="st-led gray">● ---</span>
+        <span id="alarm-msg" class="st-led gray">---</span>
+      </div>
+
+      <div class="alarm-reset-row">
+        <button id="alarm-reset" class="btn-orange" disabled>異常 RESET</button>
+      </div>
+
+      <div id="meas-grid">
+        <div class="meas-col">
+          <div class="meas-item"><span class="m-name">電壓(DC)</span><span id="val-v" class="m-val" style="color:#1f77b4">---</span><span class="m-unit">V</span></div>
+          <div class="meas-item"><span class="m-name">電流(DC)</span><span id="val-i" class="m-val" style="color:#d62728">---</span><span class="m-unit">A</span></div>
+          <div class="meas-item"><span class="m-name">功率</span><span id="val-p" class="m-val" style="color:#2ca02c">---</span><span class="m-unit">W</span></div>
+        </div>
+        <div class="meas-col">
+          <div class="meas-item"><span class="m-name">溫度</span><span id="val-t" class="m-val" style="color:#ff7f0e">---</span><span class="m-unit">°C</span></div>
+          <div class="meas-item"><span class="m-name">轉速</span><span id="val-rpm" class="m-val" style="color:#9467bd">---</span><span class="m-unit">RPM</span><span id="val-rpm-pct" class="m-pct">(--%)</span></div>
+          <div class="meas-item"><span class="m-name">功率因數</span><span id="val-pf" class="m-val" style="color:#8c564b">---</span><span class="m-unit">PF</span></div>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- 手動啟用 (閘門) -->
+    <div class="manual-enable-row">
+      <button id="manual-enable" class="btn-blue" disabled>手動啟用</button>
+    </div>
+
+    <!-- 手動控制 -->
+    <fieldset id="control-box">
+      <legend>手動控制</legend>
+      <div class="ctrl-row">
+        <label>設定電流 (A):</label>
+        <input id="set-current" type="number" min="0" max="60" step="0.1" value="0.5" class="num">
+        <button id="apply-current" class="btn-plain small">變更 (套用)</button>
+      </div>
+      <div class="ctrl-row btns">
+        <button id="load-on" class="btn-green" disabled>LOAD ON</button>
+        <button id="load-off" class="btn-red" disabled>LOAD OFF</button>
+      </div>
+      <div class="ctrl-row btns">
+        <button id="servo-on" class="btn-green" disabled>伺服 ON</button>
+        <button id="servo-off" class="btn-red" disabled>伺服 OFF</button>
+      </div>
+      <div class="ctrl-row btns">
+        <button id="gentest-on" class="btn-green" disabled>發電機測試 ON</button>
+        <button id="gentest-off" class="btn-red" disabled>發電機測試 OFF</button>
+      </div>
+      <div id="speed-row" class="ctrl-row" style="display:none">
+        <label>速度設定 (RPM):</label>
+        <input id="manual-rpm" type="number" min="0" max="6000" step="2" value="0" class="num">
+        <button id="apply-rpm" class="btn-blue small" disabled>速度設定</button>
+        <button id="stop-rpm" class="btn-red small" disabled>停止</button>
+        <div class="hint">※ 最小解析度約 1.5 RPM</div>
+      </div>
+    </fieldset>
+
+    <!-- 設定 -->
+    <fieldset id="settings-box">
+      <legend>設定</legend>
+      <div class="set-row">
+        <label class="bold">測試模式:</label>
+        <select id="mode-combo">
+          <option value="0">模式一：定轉速、變負載</option>
+          <option value="1">模式二：定負載、變轉速</option>
+        </select>
+        <!-- 模式一欄位 -->
+        <span class="mode1-field"><label class="bold red">最大電流設定 (A):</label><input id="max-current" type="number" min="0" max="300" step="0.5" value="60" class="num red-box"></span>
+        <span class="mode1-field"><label class="bold blue">RPM設定值:</label><input id="fixed-rpm" type="number" min="0" max="6000" value="6000" class="num blue-box"></span>
+        <!-- 模式二欄位 -->
+        <span class="mode2-field" style="display:none"><label class="bold red">固定負載電流 (A):</label><input id="fixed-current" type="number" min="0" max="300" step="0.5" value="5" class="num red-box"></span>
+        <span class="mode2-field" style="display:none"><label class="bold blue">最大RPM設定:</label><input id="max-rpm-calc" type="number" min="0" max="6000" value="6000" class="num blue-box"></span>
+      </div>
+      <div id="stage-groups"></div>
+    </fieldset>
+  </div>
+
+  <!-- ─ 右欄 ─ -->
+  <div id="right-col">
+    <div class="conn-row-top">
+      <fieldset class="conn-box">
+        <legend>負載機連線</legend>
+        <div class="conn-row">
+          <label>IP:</label><input id="pel-ip" type="text" value="192.168.16.128">
+          <label>Port:</label><input id="pel-port" type="text" value="4001" class="port">
+          <button id="pel-connect" class="btn-plain">連線</button>
+          <button id="pel-disconnect" class="btn-plain" disabled>中斷</button>
+          <span id="pel-status" class="status-led off">● 未連線</span>
+        </div>
+      </fieldset>
+      <fieldset class="conn-box">
+        <legend>功率計連線</legend>
+        <div class="conn-row">
+          <label>IP:</label><input id="gpm-ip" type="text" value="192.168.16.129">
+          <label>Port:</label><input id="gpm-port" type="text" value="23" class="port">
+          <button id="gpm-connect" class="btn-plain">連線</button>
+          <button id="gpm-disconnect" class="btn-plain" disabled>中斷</button>
+          <span id="gpm-status" class="status-led off">● 未連線</span>
+        </div>
+      </fieldset>
+    </div>
+
+    <!-- 自動測試 -->
+    <fieldset id="autotest-box">
+      <legend>自動測試 (5% / 50% / 100% 階段負載)</legend>
+      <div class="at-ctrl">
+        <button id="start-test" class="btn-start" disabled>開始測試</button>
+        <button id="stop-test" class="btn-stop" disabled>停止</button>
+      </div>
+      <div id="prereq" class="prereq" style="display:none"></div>
+      <div class="path-row">
+        <span>存檔路徑:</span>
+        <span id="save-dir">data（瀏覽器下載資料夾）</span>
+      </div>
+      <div class="prog-row">
+        <span id="test-status" class="test-status">待命</span>
+        <span id="test-timer" class="test-timer"></span>
+      </div>
+      <div class="manual-rec-row">
+        <button id="manual-record" class="btn-blue" disabled>手動紀錄</button>
+        <span id="manual-rec-status"></span>
+      </div>
+      <div id="plot-wrap">
+        <canvas id="plot"></canvas>
+        <div id="plot-placeholder">（測試完成後在此顯示曲線圖）</div>
+      </div>
+    </fieldset>
+  </div>
+</div>
+
+<!-- ─ 狀態列 ─ -->
+<div id="statusbar">尚未連線</div>
+
+<!-- ─ 模擬器控制台（非實機畫面，僅供體驗用）─ -->
+<fieldset id="sim-panel">
+  <legend>🧪 模擬器控制台（非實機畫面 — 模擬實際由 PLC / 硬體決定的訊號）</legend>
+  <div class="sim-row">
+    <div class="sim-group">
+      <span class="sim-label">速度控制來源 (DM7002):</span>
+      <button id="sim-speed-auto" class="btn-plain small active">自動控制</button>
+      <button id="sim-speed-manual" class="btn-plain small">手動控制</button>
+      <span class="sim-note">自動測試需「自動控制」；自動時手動控制區才會出現「速度設定」列</span>
+    </div>
+  </div>
+  <div class="sim-row">
+    <div class="sim-group">
+      <span class="sim-label">注入異常 (DM7004):</span>
+      <button id="sim-alarm-estop" class="btn-plain small">緊急停止</button>
+      <button id="sim-alarm-drv" class="btn-plain small">馬達驅動器異常</button>
+      <span class="sim-note">注入後可用畫面上的「異常 RESET」清除</span>
+    </div>
+    <div class="sim-group">
+      <span class="sim-label">環境溫度:</span>
+      <input id="sim-ambient" type="number" min="0" max="60" value="25" class="num"> °C
+    </div>
+  </div>
+  <div class="sim-row">
+    <span class="sim-note">本面板僅存在於模擬版，用來重現「現場由 PLC／實體開關提供」的狀態（速度模式、異常）。真實系統沒有這一區。</span>
+  </div>
+</fieldset>
+
+<script src="simulator.js"></script>
+<script src="plot.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

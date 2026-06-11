@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>DC 發電機量測系統 — UI 操作手冊</title>
+<style>
+  @page { size: A4; margin: 18mm 16mm; }
+  body {
+    font-family: "Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans CJK TC", sans-serif;
+    font-size: 11pt; line-height: 1.6; color: #222; margin: 0;
+  }
+  h1 { font-size: 22pt; color: #1f3a5f; border-bottom: 3px solid #1f77b4; padding-bottom: 8px; margin-top: 0; }
+  h2 { font-size: 15pt; color: #1f3a5f; border-left: 6px solid #1f77b4; padding-left: 10px; margin-top: 28px; page-break-after: avoid; }
+  h3 { font-size: 12.5pt; color: #2a4d6e; margin-top: 18px; page-break-after: avoid; }
+  blockquote {
+    border-left: 4px solid #ffb74d; background: #fff8ec; margin: 12px 0;
+    padding: 8px 14px; color: #7a5200; border-radius: 4px;
+  }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; page-break-inside: avoid; }
+  th, td { border: 1px solid #c9d3dd; padding: 6px 9px; text-align: left; vertical-align: top; }
+  th { background: #eaf2fa; color: #1f3a5f; font-weight: bold; }
+  tr:nth-child(even) td { background: #f7fafd; }
+  code {
+    background: #f0f3f6; color: #b5005c; padding: 1px 5px; border-radius: 3px;
+    font-family: "Consolas", "Courier New", monospace; font-size: 9.5pt;
+  }
+  pre {
+    background: #2b3440; color: #e6edf3; padding: 12px 14px; border-radius: 6px;
+    overflow-x: auto; font-family: "Consolas", "Courier New", monospace;
+    font-size: 9pt; line-height: 1.45; page-break-inside: avoid;
+  }
+  pre code { background: none; color: inherit; padding: 0; }
+  hr { border: none; border-top: 1px solid #d6dee6; margin: 24px 0; }
+  ul, ol { margin: 8px 0; padding-left: 24px; }
+  li { margin: 3px 0; }
+  strong { color: #1f3a5f; }
+  .toc { background: #f7fafd; border: 1px solid #d6dee6; border-radius: 6px; padding: 10px 18px; }
+  .toc ol { margin: 4px 0; }
+  .meta { color: #555; font-size: 10pt; }
+  h2 { page-break-inside: avoid; }
+</style>
+</head>
+<body>
+
+<h1>DC 發電機量測系統 — UI 操作手冊</h1>
+
+<blockquote class="meta">
+對象：操作本系統 GUI 進行 DC 發電機/充電馬達測試的現場人員<br>
+程式：<code>ui/main_window.py</code>（PyQt6），視窗標題「DC 300A直流充電馬達測試器」<br>
+整合儀器：PEL-5000C 電子負載、Keyence KV PLC、GPM-8310 功率計
+</blockquote>
+
+<p>本手冊只說明「畫面操作」。儀器接線、網路設定、CLI 測試腳本請看 <code>docs/使用手冊.md</code>。</p>
+
+<div class="toc">
+<strong>目錄</strong>
+<ol>
+<li>啟動程式</li>
+<li>畫面總覽</li>
+<li>連線三台儀器</li>
+<li>即時監視區</li>
+<li>手動控制</li>
+<li>兩種自動測試模式</li>
+<li>設定區</li>
+<li>執行自動測試</li>
+<li>手動紀錄</li>
+<li>輸出檔案</li>
+<li>狀態燈與顏色對照</li>
+<li>按鈕啟用條件一覽</li>
+<li>疑難排解</li>
+</ol>
+</div>
+
+<hr>
+
+<h2>1. 啟動程式</h2>
+<p>在桌面上<strong>雙擊應用程式捷徑「DC發電機量測系統」</strong>即可啟動（執行檔為 <code>DCGenTester.exe</code>）。</p>
+<ul>
+<li>程式預設安裝於 <code>%LocalAppData%\Programs\DCGenTester</code>（即 <code>C:\Users\&lt;使用者&gt;\AppData\Local\Programs\DCGenTester</code>）；<code>DCGenTester.exe</code> 與 <code>config.yaml</code> 放在同一資料夾。</li>
+<li>視窗會以<strong>最大化</strong>開啟。</li>
+<li>若 <code>config.yaml</code> 內 <code>plc.enabled: true</code> / <code>power_meter.enabled: true</code>，程式啟動時會<strong>自動連線</strong>該儀器；否則需手動按「連線」。</li>
+<li>找不到 <code>config.yaml</code> 會跳出明確錯誤視窗 —— <code>config.yaml</code> 必須與 <code>DCGenTester.exe</code> 放在同一資料夾（用安裝精靈安裝時會自動處理）。</li>
+<li>修改設定檔可從「開始」功能表的捷徑「編輯設定 (config.yaml)」開啟，或直接用記事本編輯該檔。</li>
+<li>上次關閉前在 UI 輸入的設定（IP/Port、最大電流、RPM、各階段時間/電流/轉速、存檔路徑、測試模式）會自動還原（存於 Windows 登錄，不會改動 <code>config.yaml</code>）。</li>
+</ul>
+
+<h2>2. 畫面總覽</h2>
+<p>程式啟動後的完整畫面（三台儀器皆未連線時）：</p>
+<img src="畫面.png" alt="UI 畫面總覽" style="width:100%; border:1px solid #c9d3dd; border-radius:4px; margin:12px 0;">
+<p>畫面分左右兩欄：</p>
+<ul>
+<li><strong>左欄</strong>：PLC 連線、即時監視、手動啟用、手動控制、設定。</li>
+<li><strong>右欄</strong>：負載機連線 + 功率計連線、自動測試。</li>
+<li><strong>最底狀態列</strong>：每次操作的結果提示（例如「LOAD ON」「已存檔」「連線失敗」），會在數秒後自動消失。</li>
+</ul>
+
+<h2>3. 連線三台儀器</h2>
+<p>每個連線框都有：<code>IP</code> 欄、<code>Port</code> 欄、「連線」鈕、「中斷」鈕、狀態燈（<code>● 未連線</code> 紅 / <code>● 已連線</code> 綠）。三台儀器各自獨立，連線/中斷互不影響。</p>
+<table>
+<tr><th>連線框</th><th>位置</th><th>現場 IP : Port</th><th>角色</th></tr>
+<tr><td><strong>負載機連線</strong></td><td>右欄上</td><td><code>192.168.16.128 : 4001</code></td><td>PEL-5000C 電子負載，讀 V/I/P、CC 控制、LOAD ON/OFF</td></tr>
+<tr><td><strong>PLC 連線</strong></td><td>左欄上</td><td><code>192.168.16.10 : 8501</code></td><td>Keyence KV PLC，讀溫度/轉速/狀態、控制伺服/速度/發電機測試</td></tr>
+<tr><td><strong>功率計連線</strong></td><td>右欄上</td><td><code>192.168.16.129 : 23</code></td><td>GPM-8310，讀功率因數（PF）</td></tr>
+</table>
+<p class="meta">※ 上表為目前 <code>config.yaml</code> 內的現場設定值，三台同屬 <code>192.168.16.x</code> 網段；若現場 IP 變更，UI 連線欄可直接修改（會記住），或同步更新 <code>config.yaml</code>。</p>
+<p>操作：</p>
+<ol>
+<li>確認 IP / Port 正確（會記住上次輸入值）。</li>
+<li>按「連線」。成功後狀態燈轉綠、IP/Port 欄鎖定、「連線」鈕變灰、「中斷」鈕可按。</li>
+<li>連線失敗只會在最底狀態列提示，不影響其他儀器。</li>
+</ol>
+<blockquote>連線成功後 IP/Port 欄會鎖住，要改需先「中斷」。<br>負載機一連上即進入遠端（REMOTE）並切到 CC 模式；中斷時會自動送 <code>LOAD OFF</code> + <code>LOCAL</code>（硬體安全網）。</blockquote>
+
+<h2>4. 即時監視區</h2>
+<p>左欄「即時監視 (5 Hz)」，由負載機/PLC/功率計三條背景執行緒各自更新。</p>
+<h3>量測數值（兩欄六項）</h3>
+<table>
+<tr><th>項目</th><th>來源</th><th>單位</th></tr>
+<tr><td>電壓(DC)</td><td>負載機</td><td>V</td></tr>
+<tr><td>電流(DC)</td><td>負載機</td><td>A</td></tr>
+<tr><td>功率</td><td>負載機</td><td>W</td></tr>
+<tr><td>溫度</td><td>PLC（DM7000）</td><td>°C</td></tr>
+<tr><td>轉速</td><td>PLC（DM7006 主值；旁邊括弧為 DM7001 的 %）</td><td>RPM</td></tr>
+<tr><td>功率因數</td><td>功率計</td><td>PF</td></tr>
+</table>
+<p>未連線或讀不到時顯示 <code>---</code>。功率計遇到超量程/無資料時，PF 會顯示 <code>0.0000</code> 但維持連線繼續輪詢。</p>
+<h3>狀態燈（兩行）</h3>
+<p><strong>第一行</strong></p>
+<ul>
+<li><strong>負載狀態</strong>：<code>● LOAD ON</code>（綠）/ <code>● LOAD OFF</code>（灰）— 負載機輸出開關。</li>
+<li><strong>模式</strong>：CC / CR / CV / CP — 負載機目前模式。</li>
+<li><strong>發電機測試開關</strong>：<code>● ON</code>（綠）/ <code>● OFF</code>（紅）— PLC 繼電器（MR103）。</li>
+</ul>
+<p><strong>第二行</strong></p>
+<ul>
+<li><strong>伺服</strong>：<code>● ON</code>（綠）/ <code>● OFF</code>（紅）— 伺服馬達狀態（PLC DM7003）。</li>
+<li><strong>異常</strong>：<code>● 正常</code>（綠）/ <code>● 異常</code>（紅）— PLC DM7004。右側「異常訊息」會逐 bit 解碼（bit0＝緊急停止、bit1＝馬達驅動器異常，其餘顯示 <code>bitN</code>）。</li>
+</ul>
+<h3>異常 RESET</h3>
+<p>位於「異常」狀態下一行的橘色按鈕。只要 PLC 已連線即可按（<strong>不受測試中鎖定</strong>），按下會送出 PLC 異常 RESET 繼電器（MR502）。</p>
+
+<h2>5. 手動控制</h2>
+<h3>手動啟用（閘門）</h3>
+<p>「手動控制」框上方有一顆「手動啟用」按鈕，是整個手動控制區的<strong>總閘門</strong>。</p>
+<ul>
+<li>只要 PLC 連線即可按；按下會切換 PLC 繼電器（MR102，ST/RS 交替）。</li>
+<li>實際狀態以 PLC 回授（DM7005）為準：ON 時按鈕轉<strong>綠</strong>、整個手動控制框背景轉<strong>淺綠</strong>；OFF 時按鈕轉<strong>藍</strong>、框背景回原色。</li>
+<li><strong>手動啟用為 ON，框內的設定電流、LOAD、伺服、發電機測試按鈕才會啟用。</strong></li>
+</ul>
+<h3>手動控制框內的操作</h3>
+<table>
+<tr><th>控制</th><th>動作</th><th>啟用條件</th></tr>
+<tr><td><strong>設定電流 (A)</strong> + 「變更(套用)」</td><td>把 CC 電流值寫入負載機（不重切模式）</td><td>負載機連線 + 手動啟用 ON</td></tr>
+<tr><td><strong>LOAD ON / LOAD OFF</strong></td><td>負載機輸出開/關</td><td>負載機連線 + 手動啟用 ON</td></tr>
+<tr><td><strong>伺服 ON / 伺服 OFF</strong></td><td>PLC 伺服繼電器（MR100）ON/OFF</td><td>PLC 連線 + 手動啟用 ON</td></tr>
+<tr><td><strong>發電機測試 ON / OFF</strong></td><td>PLC 繼電器（MR103）ON/OFF</td><td>PLC 連線 + 手動啟用 ON</td></tr>
+<tr><td><strong>速度設定 (RPM)</strong> + 「速度設定」/「停止」</td><td>把 RPM 直接寫入 PLC（DM102）</td><td>PLC 連線 + <strong>伺服 ON</strong>（與手動啟用脫鉤）</td></tr>
+</table>
+<p><strong>速度設定列</strong>只在 PLC 的速度控制來源為「自動控制速度」（DM7002=1）時才<strong>顯示</strong>；「手動控制速度」時隱藏（此時速度由實體手動端控制，UI 設定無意義）。</p>
+<ul>
+<li>「速度設定」鈕：把輸入框的 RPM 寫入 DM102。</li>
+<li>「停止」鈕：把速度命令歸 0（DM102=0），但保留輸入框數值。</li>
+<li>DM102 直接寫 RPM（輸出制，與轉速表同單位），解析度受 PLC 類比分割限制，最小解析度提示顯示在速度列下方（例：6000/4000 ≈ 1.5 RPM）。</li>
+</ul>
+<blockquote>自動測試進行中，整個手動控制框會被鎖定（自動序列獨占負載機）。</blockquote>
+
+<h2>6. 兩種自動測試模式</h2>
+<p>在「設定」框最上方的「測試模式」下拉選擇：</p>
+<table>
+<tr><th></th><th>模式一</th><th>模式二</th></tr>
+<tr><td>名稱</td><td>定轉速、變負載</td><td>定負載、變轉速</td></tr>
+<tr><td>固定的量</td><td>轉速（RPM設定值）固定一次</td><td>負載電流（固定負載電流）固定一次</td></tr>
+<tr><td>逐階段改變的量</td><td>負載電流（各階段「負載電流設定 A」）</td><td>轉速（各階段「轉速設定 RPM」）</td></tr>
+<tr><td>三階段標題</td><td><code>5%</code> / <code>50%</code> / <code>100%</code></td><td><code>速度一</code> / <code>速度二</code> / <code>速度三</code></td></tr>
+<tr><td>計算器</td><td>改「最大電流設定」→ 按百分比自動填回三階段電流</td><td>改「最大RPM設定」→ 不自動帶入（各階段轉速自行輸入）</td></tr>
+</table>
+<ul>
+<li>切換模式時，畫面會自動切換對應的設定欄位與各階段值列。</li>
+<li><strong>測試進行中無法切換模式。</strong></li>
+</ul>
+
+<h2>7. 設定區</h2>
+<p>「設定」框（自動測試開始前可改，測試中/手動紀錄中會整框鎖定）。</p>
+<h3>上排：測試模式 + 該模式專屬欄位</h3>
+<ul>
+<li><strong>模式一</strong>：「最大電流設定 (A)」（紅框，計算器）、「RPM設定值」（藍框，固定轉速）。</li>
+<li><strong>模式二</strong>：「固定負載電流 (A)」（紅框，固定電流）、「最大RPM設定」（藍框，計算器）。</li>
+</ul>
+<p>「最大電流設定」變更時，會依各階段百分比（5/50/100）自動填回三階段的「負載電流設定」；你仍可手動覆寫某一階段的值。</p>
+<h3>下排：三階段群組</h3>
+<p>每個群組（5%/50%/100% 或 速度一/二/三）內含：</p>
+<ul>
+<li><strong>測試時間 (秒)</strong>：該階段持續時間。</li>
+<li><strong>負載電流設定 (A)</strong>：模式一顯示。</li>
+<li><strong>轉速設定 (RPM)</strong>：模式二顯示。</li>
+</ul>
+<p>所有欄位變更會即時存檔，下次開啟沿用。</p>
+
+<h2>8. 執行自動測試</h2>
+<h3>前置條件提醒</h3>
+<p>「自動測試」框內「開始測試」鈕下方有一條提醒列：</p>
+<ul>
+<li>條件未齊 → 橘底列出缺項，例如：<code>⚠ 開始測試前請確認： 負載機未連線、伺服未 ON、速度未切至自動</code>。</li>
+<li>條件齊全 → 綠底 <code>✓ 條件齊全，可開始測試</code>，「開始測試」鈕才會亮。</li>
+</ul>
+<p><strong>開始測試所有前置條件</strong>：</p>
+<ol>
+<li>負載機已連線</li>
+<li>PLC 已連線</li>
+<li>伺服 ON</li>
+<li>速度切至自動（DM7002=1）</li>
+<li>無異常發生中</li>
+<li>功率計（若 <code>config.yaml</code> 設 <code>power_meter.enabled: true</code>）已連線；未啟用則不檢查</li>
+</ol>
+<h3>設定存檔路徑</h3>
+<p>「存檔路徑」列顯示目前 CSV + 曲線圖的存檔資料夾，按「瀏覽…」可更改（會記住）。預設取自 <code>config.yaml</code> 的 <code>output.save_dir</code>。</p>
+<h3>開始 → 進行中 → 結束</h3>
+<ol>
+<li>按「開始測試」。系統會依序：
+  <ul>
+  <li>開啟發電機測試繼電器（MR103 ON）</li>
+  <li>寫入起始轉速到 PLC（模式一為固定轉速、模式二為第一階段轉速）</li>
+  <li>設負載機 CC、LOAD ON，開始逐階段執行</li>
+  <li>開啟測試進行中繼電器（MR101 ON）</li>
+  </ul>
+</li>
+<li>進行中：
+  <ul>
+  <li>「開始測試」變灰、「停止」可按。</li>
+  <li>計時顯示 <code>已經過 / 總時間 秒　剩 N s</code>。</li>
+  <li>每秒重繪一次即時曲線圖（V/I/P/溫度/轉速/PF）。</li>
+  <li>設定區與手動控制區皆鎖定。</li>
+  <li>每筆取樣都會做安全檢查：V/I 超過 <code>dut.voltage_max</code> / <code>dut.current_max</code> 會<strong>先 LOAD OFF 再中止測試並回報</strong>。</li>
+  </ul>
+</li>
+<li>結束（正常完成或按「停止」）：
+  <ul>
+  <li>負載機 LOAD OFF；轉速命令歸 0、MR101 OFF、發電機測試 MR103 OFF。</li>
+  <li>自動把資料存成 CSV + 曲線圖（見第 10 節），並把曲線圖顯示在框內。</li>
+  </ul>
+</li>
+</ol>
+<blockquote>「停止」會中止序列並照常存檔已取得的資料。<br>直接關閉視窗時，若測試仍在跑，程式會先把轉速歸 0、相關繼電器關閉、負載機 LOAD OFF 再離開。</blockquote>
+
+<h2>9. 手動紀錄</h2>
+<p>「手動紀錄」是與自動流程無關的<strong>被動記錄器</strong>，用於一邊手動操作一邊記資料。</p>
+<ul>
+<li>啟用條件：負載機已連線、且未在自動測試中。</li>
+<li>按「手動紀錄」開始（鈕變「停止紀錄」）：每秒記一筆當下的快取量測值（V/I/P/溫度/轉速/PF + 目前設定電流），並即時重繪曲線。</li>
+<li>紀錄期間<strong>仍可手動控制</strong>（不像自動測試會鎖定手動區），但負載機「中斷」鈕會暫時停用。</li>
+<li>按「停止紀錄」結束，自動存成 CSV + 曲線圖（標題「手動紀錄 — 時間曲線」）。若期間無資料則只提示、不存檔。</li>
+<li>若紀錄中按負載機「中斷」前未停止，系統會先自動停止並存檔。</li>
+</ul>
+
+<h2>10. 輸出檔案</h2>
+<p>自動測試與手動紀錄共用同一套輸出，存到「存檔路徑」資料夾，檔名為時間戳記（例 <code>20260611_153012</code>）：</p>
+<ul>
+<li><code>&lt;時間&gt;.csv</code>：原始取樣資料（<code>utf-8-sig</code> 編碼，Excel 直接開不亂碼）。</li>
+<li><code>&lt;時間&gt;.png</code>：曲線圖（格式取自 <code>config.yaml</code> 的 <code>output.plot_format</code>）。</li>
+</ul>
+<p>CSV 欄位：</p>
+<table>
+<tr><th>欄位</th><th>說明</th></tr>
+<tr><td><code>timestamp</code></td><td>取樣時間</td></tr>
+<tr><td><code>elapsed_s</code></td><td>從測試起算的經過秒數</td></tr>
+<tr><td><code>stage</code></td><td>階段標籤（如 <code>50%</code> / <code>速度二</code>；手動紀錄為空）</td></tr>
+<tr><td><code>set_current_A</code></td><td>該筆的設定負載電流</td></tr>
+<tr><td><code>V</code> / <code>I</code> / <code>P</code></td><td>負載機量測電壓/電流/功率</td></tr>
+<tr><td><code>temperature</code></td><td>PLC 溫度（無則空白）</td></tr>
+<tr><td><code>rpm</code></td><td>PLC 轉速（無則空白）</td></tr>
+<tr><td><code>power_factor</code></td><td>功率計 PF（無則空白）</td></tr>
+</table>
+<blockquote>檔案以時間戳命名，永不覆蓋。</blockquote>
+
+<h2>11. 狀態燈與顏色對照</h2>
+<table>
+<tr><th>顏色</th><th>含義</th></tr>
+<tr><td>綠色 ●</td><td>正常 / ON / 已連線 / 條件齊全</td></tr>
+<tr><td>紅色 ●</td><td>OFF / 未連線 / 異常</td></tr>
+<tr><td>灰色 ● 或 ---</td><td>未知 / 尚未連線 / 無資料</td></tr>
+<tr><td>橘底提醒列</td><td>前置條件未齊（列出缺項）</td></tr>
+<tr><td>手動控制框淺綠背景</td><td>手動啟用（MR102/DM7005）為 ON</td></tr>
+<tr><td>「手動啟用」鈕綠/藍</td><td>綠＝作用中、藍＝未啟用</td></tr>
+</table>
+
+<h2>12. 按鈕啟用條件一覽</h2>
+<table>
+<tr><th>按鈕</th><th>何時可按</th></tr>
+<tr><td>各「連線」鈕</td><td>該儀器未連線時</td></tr>
+<tr><td>各「中斷」鈕</td><td>該儀器已連線時（手動紀錄/自動測試中，負載機中斷鈕會暫時停用）</td></tr>
+<tr><td>手動啟用</td><td>PLC 已連線</td></tr>
+<tr><td>異常 RESET</td><td>PLC 已連線（測試中也可按）</td></tr>
+<tr><td>設定電流 / 變更 / LOAD ON·OFF</td><td>負載機連線 + 手動啟用 ON + 非測試中</td></tr>
+<tr><td>伺服 ON·OFF / 發電機測試 ON·OFF</td><td>PLC 連線 + 手動啟用 ON + 非測試中</td></tr>
+<tr><td>速度設定 / 停止</td><td>PLC 連線 + 伺服 ON</td></tr>
+<tr><td>開始測試</td><td>6 項前置條件全齊 + 非測試中 + 非手動紀錄中</td></tr>
+<tr><td>停止（測試）</td><td>測試進行中</td></tr>
+<tr><td>手動紀錄</td><td>負載機連線 + 非測試中</td></tr>
+</table>
+
+<h2>13. 疑難排解</h2>
+<p><strong>Q1. 「開始測試」一直是灰的</strong><br>
+看提醒列缺哪幾項：通常是負載機/PLC/功率計沒連、伺服沒 ON、或速度沒切到自動。逐項補齊後即會轉綠。</p>
+<p><strong>Q2. 手動控制框內按鈕都灰灰的按不動</strong><br>
+先按上方「手動啟用」，框背景轉淺綠後框內按鈕才會啟用。伺服/速度另需 PLC 連線；速度設定還需伺服 ON。</p>
+<p><strong>Q3. 看不到「速度設定」那一列</strong><br>
+速度列只在 PLC「自動控制速度」（DM7002=1）時顯示。切到手動控制速度時會隱藏。</p>
+<p><strong>Q4. 功率因數顯示 0.0000</strong><br>
+功率計回報超量程/無資料（純 DC 下常見），連線仍正常、會繼續輪詢，不影響其他量測。</p>
+<p><strong>Q5. 某儀器連線失敗</strong><br>
+只會在最底狀態列提示，不影響其他兩台。確認 IP/Port、網路與該儀器電源，再重按「連線」。連線層級錯誤（逾時/斷線）會自動中止該儀器輪詢並回到未連線。</p>
+<p><strong>Q6. 測試中途自動停止並顯示「測試失敗」</strong><br>
+多半是 V 或 I 超過 <code>config.yaml</code> 的 <code>dut.voltage_max</code> / <code>dut.current_max</code> 保護上限，系統已先 LOAD OFF。檢查接線與負載設定後再試。</p>
+<p><strong>Q7. 關掉程式後負載沒關</strong><br>
+正常關閉會自動送 LOAD OFF + LOCAL。若異常結束，到 PEL-5000C 前面板手動按 <code>LOAD</code> 關閉，再重連即可恢復遠端控制。</p>
+
+<hr>
+<p class="meta">如需儀器接線、網路設定、CLI 測試腳本說明，請參考 <code>docs/使用手冊.md</code>；速度/轉速換算細節見 <code>速度控制設定說明.md</code>。</p>
+
+</body>
+</html>

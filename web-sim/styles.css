@@ -1,0 +1,137 @@
+/* DC 發電機量測系統 — 網頁模擬版樣式 (對應 PyQt6 main_window) */
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 0 12px 12px;
+  font-family: "Microsoft JhengHei", "微軟正黑體", "PingFang TC", "Noto Sans CJK TC", sans-serif;
+  font-size: 13px; color: #222; background: #f0f0f0;
+}
+
+/* ── 標題列 ── */
+#titlebar { display: flex; align-items: center; gap: 12px; padding: 8px 4px; }
+#logo { height: 48px; }
+#titlebar h1 { font-size: 24px; font-weight: bold; margin: 0; color: #111; }
+#sim-badge {
+  margin-left: auto; background: #fff3e0; color: #b35900;
+  border: 1px solid #ffb74d; border-radius: 6px; padding: 4px 12px; font-weight: bold;
+}
+
+/* ── 主體 ── */
+#body { display: flex; gap: 10px; align-items: flex-start; }
+#left-col { display: flex; flex-direction: column; gap: 10px; width: 660px; flex: 0 0 auto; }
+#right-col { display: flex; flex-direction: column; gap: 10px; flex: 1 1 auto; min-width: 520px; }
+
+fieldset {
+  border: 1px solid #b9b9b9; border-radius: 4px; margin: 0; padding: 8px 10px 10px;
+  background: #fafafa;
+}
+legend { font-weight: bold; color: #333; padding: 0 6px; }
+
+/* ── 連線框 ── */
+.conn-row-top { display: flex; gap: 10px; flex-wrap: wrap; }
+.conn-box { flex: 0 0 auto; }
+.conn-row { display: flex; align-items: center; gap: 6px; }
+.conn-row input { border: 1px solid #b9b9b9; border-radius: 3px; padding: 3px 6px; width: 130px; }
+.conn-row input.port { width: 54px; }
+.status-led { font-weight: bold; margin-left: 4px; white-space: nowrap; }
+.status-led.off { color: #d62728; }
+.status-led.on { color: #2ca02c; }
+
+/* ── 按鈕 ── */
+button { cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
+button:disabled { background: #aaa !important; color: #eee !important; cursor: not-allowed; }
+.btn-plain { background: #e8e8e8; color: #222; border: 1px solid #b9b9b9; padding: 4px 12px; }
+.btn-plain:hover:not(:disabled) { background: #dcdcdc; }
+.btn-plain.active { background: #1f77b4; color: #fff; border-color: #1f77b4; }
+.btn-green { background: #2ca02c; color: #fff; }
+.btn-green:hover:not(:disabled) { background: #34b237; }
+.btn-red { background: #d62728; color: #fff; }
+.btn-red:hover:not(:disabled) { background: #e34a4b; }
+.btn-blue { background: #1f77b4; color: #fff; }
+.btn-blue:hover:not(:disabled) { background: #2a8fd0; }
+.btn-orange { background: #ff7f0e; color: #fff; }
+.btn-orange:hover:not(:disabled) { background: #ff9326; }
+.small { font-size: 12px; padding: 3px 10px; }
+
+/* ── 即時監視 ── */
+.status-line { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: bold; margin: 2px 0; flex-wrap: wrap; }
+.st-title { } .st-title.sp { margin-left: 24px; }
+.st-led { font-weight: bold; }
+.st-led.gray { color: gray; }
+.st-led.green { color: #2ca02c; }
+.st-led.red { color: #d62728; }
+.st-led.idle { color: #888; }
+.st-led.blue { color: #1f77b4; }
+.alarm-reset-row { margin: 6px 0; }
+.btn-orange { padding: 6px 16px; }
+
+#meas-grid { display: flex; gap: 40px; margin-top: 8px; }
+.meas-col { display: flex; flex-direction: column; gap: 10px; }
+.meas-item { display: flex; align-items: baseline; gap: 8px; }
+.m-name { font-size: 19px; font-weight: bold; width: 100px; }
+.m-val { font-size: 30px; font-weight: bold; font-family: "Consolas", monospace; min-width: 120px; text-align: right; }
+.m-unit { font-size: 15px; color: #555; }
+.m-pct { font-size: 14px; color: #9467bd; }
+
+/* ── 手動啟用 ── */
+.manual-enable-row { }
+#manual-enable { padding: 5px 18px; }
+
+/* ── 手動控制 ── */
+#control-box.enabled-bg { background: #cdf0cd; }
+.ctrl-row { display: flex; align-items: center; gap: 6px; margin: 4px 0; flex-wrap: wrap; }
+.ctrl-row.btns { gap: 8px; }
+.ctrl-row label { min-width: 96px; }
+input.num { border: 1px solid #b9b9b9; border-radius: 3px; padding: 3px 6px; width: 92px; }
+#control-box .btn-green, #control-box .btn-red { width: 124px; padding: 5px 0; }
+.hint { width: 100%; font-size: 11px; color: #b35900; }
+
+/* ── 設定 ── */
+.set-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.bold { font-weight: bold; } .red { color: #d62728; } .blue { color: #1f77b4; }
+select { border: 1px solid #b9b9b9; border-radius: 3px; padding: 3px 6px; }
+.red-box { color: #d62728; font-weight: bold; border: 2px solid #d62728; background: #fff5f5; }
+.blue-box { color: #1f77b4; font-weight: bold; border: 2px solid #1f77b4; background: #f5f9ff; }
+#stage-groups { display: flex; gap: 10px; }
+.stage-group { border: 1px solid #b9b9b9; border-radius: 4px; padding: 6px 10px; flex: 1; background: #fff; }
+.stage-group .gtitle { font-weight: bold; font-size: 14px; margin-bottom: 6px; }
+.stage-group .frow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 4px 0; }
+.stage-group .frow label { font-size: 12px; }
+.stage-group input { width: 84px; border: 1px solid #b9b9b9; border-radius: 3px; padding: 3px 6px; }
+fieldset:disabled { opacity: 0.6; }
+
+/* ── 自動測試 ── */
+.at-ctrl { display: flex; gap: 10px; margin-bottom: 8px; }
+.btn-start { background: #2ca02c; color: #fff; font-size: 16px; padding: 10px 24px; }
+.btn-start:hover:not(:disabled) { background: #34b237; }
+.btn-stop { background: #d62728; color: #fff; font-size: 16px; padding: 10px 24px; }
+.btn-stop:hover:not(:disabled) { background: #e34a4b; }
+.prereq { font-size: 13px; font-weight: bold; border-radius: 4px; padding: 6px 10px; margin-bottom: 8px; }
+.prereq.warn { color: #b35900; background: #fff3e0; border: 1px solid #ffb74d; }
+.prereq.ok { color: #2ca02c; background: #f1faf1; border: 1px solid #a5d6a7; }
+.path-row { display: flex; gap: 8px; margin: 6px 0; color: #555; }
+.path-row #save-dir { color: #555; }
+.prog-row { display: flex; align-items: center; margin: 6px 0; }
+.test-status { font-size: 15px; font-weight: bold; color: #555; }
+.test-status.running { color: #2ca02c; }
+.test-timer { margin-left: auto; font-size: 20px; font-weight: bold; font-family: "Consolas", monospace; color: #1f77b4; }
+.manual-rec-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; }
+#manual-record { padding: 6px 18px; }
+#manual-rec-status { font-size: 13px; color: #444; }
+#plot-wrap { position: relative; border: 1px solid #ddd; background: #fff; min-height: 360px; flex: 1; }
+#plot { width: 100%; display: block; }
+#plot-placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #aaa; pointer-events: none; }
+
+/* ── 狀態列 ── */
+#statusbar {
+  margin-top: 10px; padding: 6px 10px; background: #e4e4e4;
+  border: 1px solid #c4c4c4; border-radius: 4px; color: #333; font-size: 12px;
+}
+
+/* ── 模擬器控制台 ── */
+#sim-panel { margin-top: 10px; border: 2px dashed #ff9326; background: #fffaf2; }
+#sim-panel legend { color: #b35900; }
+.sim-row { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; margin: 4px 0; }
+.sim-group { display: flex; align-items: center; gap: 6px; }
+.sim-label { font-weight: bold; color: #7a5200; }
+.sim-note { font-size: 11px; color: #999; }
+.sim-group input.num { width: 64px; }

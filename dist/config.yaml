@@ -1,0 +1,170 @@
+# PEL-5000C 測試框架設定檔
+# DC 發電機量測系統
+
+# === 儀器連線設定 (LAN / TCP Socket) ===
+instrument:
+  ip: "192.168.16.128"        # PEL-5000C 預設 IP，請依現場 LAN 設定修改
+  port: 4001                 # SCPI Socket Server Port (固定)
+  timeout: 5.0               # 通訊逾時 (秒)
+  command_delay: 0.05        # 每筆指令後等待 (秒)，避免儀器來不及處理
+  read_buffer: 4096          # 接收緩衝大小 (bytes)
+
+# === 功率計 GPM-8310 (LAN / TCP Socket，量功率因數 PF) ===
+# 客戶端規格要求讀取功率因數 (LAMBda / λ) 數值。
+# ⚠ 純 DC 系統 PF 恆為 1，是否有物理意義依現場 GPM-8310 接線位置而定；
+#   驅動不臆測接線，只忠實讀回儀器的 λ。
+power_meter:
+  enabled: false             # 實機接上後改 true
+  ip: "192.168.16.129"       # GPM-8310 現場 IP (與 PEL 192.168.16.128 同網段，不衝突)
+  port: 23                   # Socket Port (GPM-8310 出廠預設 00023，可於面板修改)
+  timeout: 5.0               # 通訊逾時 (秒)
+  command_delay: 0.05        # 每筆指令後等待 (秒)
+  read_buffer: 4096          # 接收緩衝大小 (bytes)
+  poll_interval_sec: 1.0     # UI 多久讀一次功率因數
+  input_mode: ""             # ""=不更動儀器設定；可填 AC / DC / ACDC (依量測側接線)
+
+# === 待測 DC 發電機規格 ===
+dut:
+  name: "DC Generator Sample-001"
+  rated_voltage: 48.0        # 額定電壓 (V)
+  rated_current: 50.0        # 額定電流 (A)
+  rated_power: 2400.0        # 額定功率 (W)
+  voltage_max: 60.0          # 開路電壓上限保護 (V)
+  current_max: 60.0          # 電流上限保護 (A)
+
+# === V-I 曲線測試參數 ===
+vi_curve:
+  mode: "CC"                 # CC (定電流) 掃描
+  current_start: 0.5
+  current_stop: 50.0
+  current_step: 2.5
+  dwell_seconds: 1.5         # 每點停留秒數 (待穩定後讀值)
+  samples_per_point: 5       # 每點重複量測平均
+  sample_interval: 0.1       # 每筆量測間隔 (秒)
+
+# === 效率曲線測試參數 ===
+efficiency_test:
+  mode: "CC"
+  current_points: [1.0, 5.0, 10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0]
+  dwell_seconds: 2.0
+  samples_per_point: 10
+  # 輸入端功率 (機械輸入或電池輸入) 由使用者依場景填寫
+  # 此值用於計算 efficiency = P_out / P_in
+  input_power_source: "manual"   # manual | constant | external_meter
+  input_power_constant: 2400.0   # 若 input_power_source=constant 則使用此固定值
+
+# === 自動掃描測試 ===
+load_sweep:
+  modes: ["CC", "CR", "CV", "CP"]
+  cc_range: [0.5, 50.0, 5.0]    # [start, stop, step]
+  cr_range: [1.0, 100.0, 10.0]  # 歐姆
+  cv_range: [10.0, 50.0, 5.0]   # 伏特
+  cp_range: [50.0, 2400.0, 200.0]  # 瓦特
+  dwell_seconds: 2.0
+
+# === 自動測試 (5% / 50% / 100% 階段負載) ===
+# 各階段負載電流 = 百分比 × UI「設定」區的「負載電流最大設定值」
+# 各階段持續時間 = UI「設定」區的 5%/50%/100% 測試時間
+auto_test:
+  load_percents: [5, 50, 100]   # 三階段百分比 (對應三個時間欄位)
+  sample_interval: 0.5          # 取樣間隔 (秒)
+
+# === 資料輸出設定 ===
+output:
+  data_dir: "data"
+  reports_dir: "reports"
+  save_dir: "data"            # 自動測試紀錄 (CSV + 曲線圖) 存檔路徑，UI 可改 (預設值)
+  csv_encoding: "utf-8-sig"   # 含 BOM，Excel 開啟才不會亂碼
+  plot_dpi: 120
+  plot_format: "png"          # png | pdf | svg
+
+# === 溫度監視 (FOTEK NT-22-RS via RS-485 / Modbus RTU) ===
+# ⚠ 已停用: 溫度改由 PLC 整合 (見上方 plc.signals.temperature)。
+#   此區與 fotek/ 驅動保留備用，UI 不再直接讀 FOTEK。
+temperature:
+  enabled: false             # 停用 (改走 PLC)
+  port: "COM3"               # FOTEK 接的 COM port (依 Windows 裝置管理員)
+  baudrate: 9600             # 9600 / 19200 / 38400
+  slave_id: 1                # FOTEK 站號 (預設 01)
+  timeout: 1.0               # 序列讀取逾時 (秒)
+  poll_interval_sec: 1.0     # UI 多久讀一次
+
+# === PLC 馬達控制 (Keyence KV-N40, 上位鏈路 Host-Link via TCP/IP) ===
+# 專案組態: [0]KV-N40(R000/R500) [1]KV-NC2DA(R1000/DM10000 類比輸出)
+#           [2]KV-NC1EP(R2000/DM10100 EtherNet/IP)
+plc:
+  enabled: false             # 實機接上後改 true
+  ip: "192.168.16.10"        # KV PLC 現場 IP (與 PEL/GPM 同 192.168.16.x 網段)
+  port: 8501                 # 上位鏈路 TCP port (現場 KV STUDIO 設定 8501)
+  timeout: 2.0               # 通訊逾時 (秒)
+  command_delay: 0.0         # 每筆指令後等待 (秒)，Ethernet 通常不需要
+  read_buffer: 4096
+  poll_interval_sec: 0.2     # 200ms 讀一次集中監控區
+  # PC→PLC 心跳: 連線後每輪輪詢 (poll_interval_sec) 把遞增計數 (0~32767 循環) 寫入 device。
+  # PLC 監看此值是否持續變化 → 判斷上位機是否存活 (UI 關閉/斷線/當機則停止變化)。
+  heartbeat:
+    enabled: true
+    device: "DM130"
+    interval_sec: 1.0        # 心跳寫入間隔 (秒)；與監控輪詢解耦，1 秒即可
+  # 集中監控區: PLC 把溫度/轉速等資料彙整到一段連續 DM，一次 RDS 全讀回
+  monitor:
+    start: "DM7000"          # 監控區起始
+    count: 20                # 連續 20 個 word
+  # 手動控制用的繼電器 (上位鏈路 ST=ON / RS=OFF)
+  control:
+    servo: "MR100"           # 伺服 ON/OFF 繼電器
+    test: "MR101"            # 自動測試進行中繼電器 (開始測試 ON、流程結束 OFF)
+    manual_enable: "MR102"   # 手動啟用繼電器 (ST=ON / RS=OFF；狀態反映到 DM7005)
+    generator_test: "MR103"  # 發電機測試 ON/OFF 繼電器 (ST=ON / RS=OFF)
+    rpm_command: "DM102"     # 轉速命令寫入點 (直接存 RPM 整數，輸出制；結束歸 0)
+    alarm_reset: "MR502"     # 異常 RESET 繼電器 (按下直接 ST=ON)
+  # 轉速命令: DM102 直接寫 RPM (輸出制，與轉速表同單位)，不再換算百分比。PLC 端把 RPM
+  # 換算成 rpm_divisions(4000) 分割的類比命令。馬達最大 2000rpm，經轉速表轉換後輸出最大
+  # 6000rpm (3:1)；操作以輸出 6000 為準。命令夾在 0..rpm_full_scale。
+  rpm_full_scale: 6000       # 輸出端滿刻度轉速 (RPM，轉速表讀值)；命令上限
+  rpm_divisions: 4000        # PLC 類比模組分割數；最小解析度 = rpm_full_scale / rpm_divisions (6000/4000=1.5 RPM)
+  # 監控區內各訊號對應 (★ 目前僅確認溫度=DM7000，其餘待現場確認)
+  signals:
+    temperature:
+      device: "DM7000"       # 溫度 (FOTEK 已由 PLC 整合進來)
+      scale: 1.0             # PLC 存整數 (無小數)，故 ×1
+      signed: true           # 允許負溫
+    rpm:
+      device: "DM7006"       # 轉速回授 (RPM，整數)
+      scale: 1.0
+      signed: false
+    rpm_percent:
+      device: "DM7001"       # 轉速回授 (%，整數) — 顯示於 RPM 旁括弧
+      scale: 1.0
+      signed: false
+    mode:
+      device: "DM7002"       # 速度控制來源: 1=自動控制速度(UI 送 DM102), 0=手動控制速度。自動時手動控制區顯示「速度設定」列
+      scale: 1.0
+      signed: false
+    servo:
+      device: "DM7003"       # 伺服狀態: 1=ON, 0=OFF
+      scale: 1.0
+      signed: false
+    manual_enable:
+      device: "DM7005"       # 手動啟用 (MR102) 狀態: 非0=已啟用, 0=未啟用
+      scale: 1.0
+      signed: false
+    alarm:
+      device: "DM7004"       # 異常燈號: 非0=異常, 0=正常
+      scale: 1.0
+      signed: false
+    alarm_code:
+      device: "DM7004"       # 異常碼即 DM7004 本身 (逐 bit 對應 alarm_bits；DM7004.0=急停)
+      scale: 1.0             # 位元旗標，不可縮放
+      signed: false          # 當無號讀回，逐 bit 判讀
+  # 異常碼 (DM7004) 各 bit 對應訊息 (bit0 = 最低位)；未列出的 bit 以 "bitN" 顯示
+  alarm_bits:
+    0: "緊急停止"
+    1: "馬達驅動器異常"
+
+# === 日誌設定 ===
+logging:
+  level: "INFO"               # DEBUG | INFO | WARNING | ERROR
+  log_dir: "data"
+  log_to_file: true
+  log_to_console: true
